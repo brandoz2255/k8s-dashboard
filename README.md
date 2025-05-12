@@ -2,7 +2,7 @@
 
 Welcome to my personal internet dashboard for managing and automating my `Kubernetes` home server. When I open this app I get a friendly snapshot of everything I need to tackle today, from container health to quick links for my most-used services. Think of it as the launchpad for my `DevSecOps` playground.
 
-![[Pasted image 20250512010558.png]]
+![image](https://github.com/user-attachments/assets/d9f25cc8-4a73-4a99-a658-f6b2496bd7fa)
 
 ## Key features
 
@@ -18,19 +18,24 @@ Welcome to my personal internet dashboard for managing and automating my `Kubern
     • Node switcher for jumping between cluster nodes without extra clicks  
     • Quick-access links to your favorite web tools
 
-![[Pasted image 20250512010636.png]]
+
 
 3. **Containers page**  
     Right now it lists running containers, images, and basic logs. Soon I’ll add a Docker Desktop–style view complete with buttons to restart containers, update images, back up volumes, clean up old data, and show advanced stats. (planned)
 
-![[Pasted image 20250512010658.png]]
+![image](https://github.com/user-attachments/assets/726d1c87-6bc9-4ad6-a9f5-9fbf0a1f404c)
+
 
 4. **Terminal & SSH**  
     One-click terminal scripts let me run my go-based automation tools. Next to it is an SSH tab for instant access to any node no extra command-line gymnastics. (planned)
 
-![[Pasted image 20250512010722.png]]
+![image](https://github.com/user-attachments/assets/729360ee-98cb-458a-8b4a-c7dd79c6b931)
 
-![[Pasted image 20250512010744.png]]
+![image](https://github.com/user-attachments/assets/9fd7b0d7-f9e5-4b65-b28a-c4d71541c5b8)
+
+![image](https://github.com/user-attachments/assets/e5697fe1-c959-4a4a-bdda-b3e8e06919fe)
+
+
 5. **Chatbot corner**  
     I’m cooking up an AI agent that can answer questions about my infrastructure or even help me troubleshoot issues on the fly. (planned)
 
@@ -45,11 +50,12 @@ Welcome to my personal internet dashboard for managing and automating my `Kubern
 3. **Social feed & weather widget**  
     A mini-RSS reader for articles I follow, showing headline stats. And a weather panel so I know if I need an umbrella before I head out.
 
+
+
+
 ### Rice Corner
 
-- My Rice
-- Arch btw
-- Animated wallpaper btw
+- My Rice :)
 
-![[Pasted image 20250512011238.png]]
+![image](https://github.com/user-attachments/assets/d2dbc29f-9a6c-448d-90d7-d2a26629e5aa)
 
