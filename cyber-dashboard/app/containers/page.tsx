@@ -589,109 +589,11 @@ const CommandCard: React.FC<CommandCardProps> = ({ title, description, icon: Ico
 
 export default function ContainersPage() {
   // Add state for resource allocation
-  const [selectedNodeResource, setSelectedNodeResource] = useState("node-1")
-  const [cpuAllocation, setCpuAllocation] = useState(2) // Default 2 cores
-  const [memoryAllocation, setMemoryAllocation] = useState(4) // Default 4GB
-  const [diskAllocation, setDiskAllocation] = useState(20) // Default 20GB
-  const [showNetworkingOptions, setShowNetworkingOptions] = useState(false)
 
-  // Sample nodes - in production, you would fetch this from your API
-  const nodes = [
-    { id: "node-1", name: "Primary Node" },
-    { id: "node-2", name: "Secondary Node" },
-    { id: "node-3", name: "Backup Node" },
-    { id: "node-4", name: "Edge Node" },
-  ]
 
-  // Sample networking options
-  const networkingOptions = [
-    { id: "calico", name: "Calico" },
-    { id: "flannel", name: "Flannel" },
-    { id: "cilium", name: "Cilium" },
-    { id: "weave", name: "Weave Net" },
-  ]
 
-  // Sample storage provisioners
-  const storageOptions = [
-    { id: "local-path", name: "Local Path Provisioner" },
-    { id: "nfs", name: "NFS Subdir External Provisioner" },
-    { id: "ceph", name: "Ceph RBD" },
-    { id: "longhorn", name: "Longhorn" },
-  ]
 
-  // Function to handle resource allocation
-  const handleAllocateResources = () => {
-    // In production, you would call your API to allocate resources
-    // Example: POST /api/nodes/{selectedNode}/resources
-    console.log("Allocating resources:", {
-      node: selectedNodeResource,
-      cpu: cpuAllocation,
-      memory: memoryAllocation,
-      disk: diskAllocation,
-    })
 
-    // Show success message or handle errors
-    alert(
-      `Resources allocated to ${selectedNodeResource}: ${cpuAllocation} CPU cores, ${memoryAllocation}GB RAM, ${diskAllocation}GB disk`,
-    )
-
-    /* 
-    // Backend integration would look something like this:
-    fetch(`/api/nodes/${selectedNode}/resources`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        cpu: cpuAllocation,
-        memory: memoryAllocation,
-        disk: diskAllocation
-      }),
-    })
-    .then(response => response.json())
-    .then(data => {
-      // Handle success
-    })
-    .catch(error => {
-      // Handle error
-    });
-    */
-  }
-
-  // Function to handle networking installation
-  const handleInstallNetworking = (networkingOption, storageOption) => {
-    // In production, you would call your API to install networking
-    // Example: POST /api/nodes/{selectedNode}/networking
-    console.log("Installing networking:", {
-      node: selectedNodeResource,
-      networking: networkingOption,
-      storage: storageOption,
-    })
-
-    // Show success message or handle errors
-    alert(`Installing ${networkingOption} networking and ${storageOption} storage on ${selectedNodeResource}`)
-
-    /* 
-    // Backend integration would look something like this:
-    fetch(`/api/nodes/${selectedNode}/networking`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        networking: networkingOption,
-        storage: storageOption
-      }),
-    })
-    .then(response => response.json())
-    .then(data => {
-      // Handle success
-    })
-    .catch(error => {
-      // Handle error
-    });
-    */
-  }
 
   const [activeTab, setActiveTab] = useState<"k8sboard" | "terminal" | "ssh">("k8sboard")
   const [selectedContainer, setSelectedContainer] = useState<string | null>(null)
@@ -1970,7 +1872,7 @@ export default function ContainersPage() {
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500">
                       <Terminal className="h-8 w-8 mb-2 opacity-30" />
-                      <p className="text-sm">Select a container and click "Show logs" to view real-time logs</p>
+                      <p className="text-sm">Select a container and click &quot;Show logs&quot; to view real-time logs</p>
                     </div>
                   )}
                 </div>

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gin-api-config
+  namespace: cyber-dashboard
+  labels:
+    app: gin-api
+    component: backend
+data:
+  PORT: "8080"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "cyber_dashboard"
+  ENVIRONMENT: "production"

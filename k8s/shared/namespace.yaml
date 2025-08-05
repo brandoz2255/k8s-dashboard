@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cyber-dashboard
+  labels:
+    name: cyber-dashboard
+    app: cyber-dashboard

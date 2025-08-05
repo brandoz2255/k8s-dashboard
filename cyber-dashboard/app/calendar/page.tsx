@@ -93,7 +93,7 @@ export default function CalendarPage() {
   // State for stopwatch
   const [isRunning, setIsRunning] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
-  const [startTime, setStartTime] = useState<number | null>(null)
+  const [, setStartTime] = useState<number | null>(null)
 
   // State for timer
   const [timerMinutes, setTimerMinutes] = useState(25)
@@ -219,19 +219,6 @@ export default function CalendarPage() {
   }
 
   // Todo list functions
-  const addTodo = () => {
-    if (newTodo.trim() === "") return
-
-    const newItem: TodoItem = {
-      id: Date.now().toString(),
-      text: newTodo,
-      completed: false,
-      date: new Date().toISOString().split("T")[0],
-    }
-
-    setTodos([...todos, newItem])
-    setNewTodo("")
-  }
 
   // Add todo with notification
   const addTodoWithNotification = () => {
@@ -368,18 +355,6 @@ export default function CalendarPage() {
     }
   }
 
-  const switchTimerType = () => {
-    setIsTimerRunning(false)
-    if (timerType === "focus") {
-      setTimerType("break")
-      setTimerMinutes(5)
-      setTimerSeconds(0)
-    } else {
-      setTimerType("focus")
-      setTimerMinutes(25)
-      setTimerSeconds(0)
-    }
-  }
 
   // Function to add a new event
   const handleAddEvent = () => {
@@ -650,7 +625,7 @@ export default function CalendarPage() {
                             <label className="text-xs text-gray-400 block mb-1">Category</label>
                             <select
                               value={newEvent.category}
-                              onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value as any })}
+                              onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value as 'meeting' | 'reminder' | 'deadline' | 'personal' })}
                               className="w-full bg-cyan-950/30 border border-cyan-950 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
                             >
                               <option value="meeting">Meeting</option>

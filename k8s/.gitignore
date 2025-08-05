@@ -1,0 +1,63 @@
+# Kubernetes sensitive files
+**/secret*.yaml
+**/secrets.yaml
+**/*secret*.yaml
+
+# Environment-specific configurations
+**/production/
+**/staging/
+**/development/
+**/*-prod.yaml
+**/*-staging.yaml  
+**/*-dev.yaml
+
+# Sensitive data files
+**/*.key
+**/*.crt
+**/*.pem
+**/*.p12
+**/*.pfx
+**/tls/
+**/ssl/
+**/certs/
+
+# Generated/Applied manifests
+**/applied/
+**/generated/
+**/*.applied.yaml
+**/*.generated.yaml
+
+# Helm generated files (if used)
+**/charts/*.tgz
+**/charts/*/charts/
+**/charts/*/requirements.lock
+
+# Backup files
+**/*.bak
+**/*.backup
+**/*.orig
+
+# Editor files
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/*~
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Local development overrides
+**/local/
+**/*-local.yaml
+**/override*.yaml
+
+# Kustomize output
+**/kustomization.yaml.bak
+**/kustomized.yaml
+
+# Temporary files
+**/*.tmp
+**/tmp/
+**/.temp/

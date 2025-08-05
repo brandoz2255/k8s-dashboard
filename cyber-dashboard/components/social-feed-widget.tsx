@@ -1,24 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import {
-  Twitter,
+  Shield,
   MessageCircle,
   Heart,
   Repeat2,
-  Github,
+  Cpu,
   Globe,
-  Youtube,
+  Container,
   ExternalLink,
   RefreshCw,
   Settings,
+  Clock,
 } from "lucide-react"
 
-// Social media post type definition
+// Feed article type from FastAPI backend
+interface FeedArticle {
+  title: string
+  description: string
+  url: string
+  source: string
+  category: string
+  published: string
+  domain: string
+}
+
+// Component display format
 interface SocialPost {
   id: string
-  platform: "twitter" | "github" | "youtube" | "blog"
+  platform: "security" | "tech" | "devops"
   author: {
     name: string
     handle: string
@@ -34,143 +46,160 @@ interface SocialPost {
   link: string
 }
 
-// Mock social media posts
+// Transform API data to component format
+const transformFeedData = (articles: FeedArticle[]): SocialPost[] => {
+  return articles.map((article, index) => ({
+    id: `feed_${index}`,
+    platform: article.category as "security" | "tech" | "devops",
+    author: {
+      name: article.source,
+      handle: article.domain,
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    content: `${article.title} - ${article.description}`,
+    timestamp: formatTimestamp(article.published),
+    stats: {
+      likes: Math.floor(Math.random() * 100) + 10,
+      comments: Math.floor(Math.random() * 20) + 1,
+      shares: Math.floor(Math.random() * 50) + 5,
+    },
+    link: article.url,
+  }))
+}
+
+// Format timestamp to relative time
+const formatTimestamp = (published: string): string => {
+  try {
+    const now = new Date()
+    const publishedDate = new Date(published)
+    const diffMs = now.getTime() - publishedDate.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMinutes = Math.floor(diffMs / (1000 * 60))
+
+    if (diffMinutes < 60) {
+      return `${diffMinutes}m ago`
+    } else if (diffHours < 24) {
+      return `${diffHours}h ago`
+    } else {
+      const diffDays = Math.floor(diffHours / 24)
+      return `${diffDays}d ago`
+    }
+  } catch {
+    return "recently"
+  }
+}
+
+// Mock fallback data
 const mockPosts: SocialPost[] = [
   {
-    id: "tw1",
-    platform: "twitter",
+    id: "mock1",
+    platform: "security",
     author: {
-      name: "Cyber Security News",
-      handle: "@CyberSecNews",
+      name: "Security News",
+      handle: "security.local",
       avatar: "/placeholder.svg?height=40&width=40",
     },
-    content:
-      "New vulnerability discovered in Docker containers. Update to the latest version immediately to patch CVE-2023-1234.",
+    content: "Latest security updates and vulnerability reports - Stay protected with our security feed.",
     timestamp: "10m ago",
-    stats: {
-      likes: 42,
-      comments: 7,
-      shares: 23,
-    },
-    link: "https://twitter.com",
+    stats: { likes: 42, comments: 7, shares: 23 },
+    link: "#",
   },
   {
-    id: "gh1",
-    platform: "github",
+    id: "mock2", 
+    platform: "tech",
     author: {
-      name: "docker/docker",
-      handle: "docker",
+      name: "Tech Updates",
+      handle: "tech.local",
       avatar: "/placeholder.svg?height=40&width=40",
     },
-    content: "Release v24.0.5: Fixed critical security vulnerability in container runtime. All users should update.",
+    content: "Latest technology news and developments - Keep up with the tech world.",
     timestamp: "2h ago",
-    stats: {
-      likes: 128,
-      comments: 14,
-      shares: 56,
-    },
-    link: "https://github.com",
-  },
-  {
-    id: "yt1",
-    platform: "youtube",
-    author: {
-      name: "Container Tech",
-      handle: "ContainerTech",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    content:
-      "New video: 'Hardening Docker Containers for Production' - Learn the best practices for securing your containers.",
-    timestamp: "4h ago",
-    stats: {
-      likes: 312,
-      comments: 28,
-      shares: 45,
-    },
-    link: "https://youtube.com",
-  },
-  {
-    id: "tw2",
-    platform: "twitter",
-    author: {
-      name: "Kubernetes",
-      handle: "@kubernetesio",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    content: "Kubernetes v1.28 is now available! Check out the new features and improvements in our latest release.",
-    timestamp: "1h ago",
-    stats: {
-      likes: 215,
-      comments: 32,
-      shares: 87,
-    },
-    link: "https://twitter.com",
-  },
-  {
-    id: "blog1",
-    platform: "blog",
-    author: {
-      name: "Security Weekly",
-      handle: "secweekly",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    content: "Top 10 Container Security Best Practices for 2023 - Our latest guide is now available on the blog.",
-    timestamp: "6h ago",
-    stats: {
-      likes: 76,
-      comments: 12,
-      shares: 34,
-    },
-    link: "https://securityweekly.com",
-  },
-  {
-    id: "gh2",
-    platform: "github",
-    author: {
-      name: "kubernetes/kubernetes",
-      handle: "kubernetes",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    content:
-      "PR #12345: Fixed critical security issue in API server authentication. Backported to all supported versions.",
-    timestamp: "5h ago",
-    stats: {
-      likes: 98,
-      comments: 23,
-      shares: 41,
-    },
-    link: "https://github.com",
+    stats: { likes: 128, comments: 14, shares: 56 },
+    link: "#",
   },
 ]
 
 export function SocialFeedWidget() {
-  const [filter, setFilter] = useState<"all" | "twitter" | "github" | "youtube" | "blog">("all")
+  const [filter, setFilter] = useState<"all" | "security" | "tech" | "devops">("all")
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [posts, setPosts] = useState<SocialPost[]>(mockPosts)
+  const [lastUpdated, setLastUpdated] = useState<string>("")
 
-  // Filter posts based on selected platform
-  const filteredPosts = filter === "all" ? mockPosts : mockPosts.filter((post) => post.platform === filter)
+  // Filter posts based on selected category
+  const filteredPosts = filter === "all" ? posts : posts.filter((post) => post.platform === filter)
+
+  // Function to fetch feed data from FastAPI
+  const fetchFeedData = useCallback(async () => {
+    setIsRefreshing(true)
+
+    try {
+      const fastApiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://api.command.dulc3.tech'
+        : 'http://localhost:8000'
+      
+      const categories = filter === "all" ? "security,tech,devops" : filter
+      const response = await fetch(`${fastApiUrl}/api/social/feed?categories=${categories}&limit=20`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(15000), // 15 second timeout
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const feedData = await response.json()
+      
+      // Transform API data to component format
+      const transformedPosts = transformFeedData(feedData.articles)
+      setPosts(transformedPosts)
+      setLastUpdated(new Date(feedData.last_updated).toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      }))
+      
+      console.log('Social feed data fetched successfully:', feedData.total_count, 'articles')
+      
+    } catch (error) {
+      console.error('Error fetching social feed data:', error)
+      
+      // Fallback to mock data if API fails
+      setPosts(mockPosts)
+      setLastUpdated("offline")
+      console.log('Using fallback mock social feed data')
+      
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [filter])
 
   // Function to refresh feed
   const refreshFeed = () => {
-    setIsRefreshing(true)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsRefreshing(false)
-    }, 1000)
+    fetchFeedData()
   }
+
+  // Fetch feed data on component mount and when filter changes
+  useEffect(() => {
+    fetchFeedData()
+    
+    // Set up interval to refresh feed data (every 15 minutes)
+    const interval = setInterval(fetchFeedData, 15 * 60 * 1000)
+    
+    return () => clearInterval(interval)
+  }, [fetchFeedData])
 
   // Function to get platform icon
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
-      case "twitter":
-        return <Twitter className="h-4 w-4 text-cyan-400" />
-      case "github":
-        return <Github className="h-4 w-4 text-cyan-400" />
-      case "youtube":
-        return <Youtube className="h-4 w-4 text-cyan-400" />
-      case "blog":
-        return <Globe className="h-4 w-4 text-cyan-400" />
+      case "security":
+        return <Shield className="h-4 w-4 text-red-400" />
+      case "tech":
+        return <Cpu className="h-4 w-4 text-blue-400" />
+      case "devops":
+        return <Container className="h-4 w-4 text-green-400" />
       default:
         return <Globe className="h-4 w-4 text-cyan-400" />
     }
@@ -188,14 +217,13 @@ export function SocialFeedWidget() {
         <div className="flex space-x-2">
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
+            onChange={(e) => setFilter(e.target.value as "all" | "security" | "tech" | "devops")}
             className="bg-cyan-950/20 border border-cyan-950 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500 appearance-none"
           >
             <option value="all">All</option>
-            <option value="twitter">Twitter</option>
-            <option value="github">GitHub</option>
-            <option value="youtube">YouTube</option>
-            <option value="blog">Blogs</option>
+            <option value="security">Security</option>
+            <option value="tech">Tech</option>
+            <option value="devops">DevOps</option>
           </select>
           <button
             onClick={refreshFeed}
@@ -263,7 +291,10 @@ export function SocialFeedWidget() {
       </div>
 
       <div className="p-3 border-t border-cyan-950 flex justify-between items-center bg-cyan-950/10 mt-auto">
-        <span className="text-xs text-gray-400">Latest updates from your feeds</span>
+        <div className="flex items-center text-xs text-gray-400">
+          <Clock className="h-3 w-3 mr-1" />
+          Last updated: {lastUpdated || "Loading..."}
+        </div>
         <button
           onClick={() => window.open("/feed-manager", "_blank")}
           className="relative bg-cyan-950 hover:bg-pink-900 text-cyan-400 hover:text-pink-400 px-2 py-1 rounded text-xs flex items-center transition-colors group"
