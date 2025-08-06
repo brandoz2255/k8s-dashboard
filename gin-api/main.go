@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gin-api/route"
+	"github.com/dulc3/k8s-dashboard/gin-api/route"
 	"net/http"
 	"os"
 	"strings"
