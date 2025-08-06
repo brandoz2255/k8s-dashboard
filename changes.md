@@ -626,3 +626,33 @@ Fixed CI/CD pipeline job triggers and Docker image pushing logic
 - Resolved all CI/CD execution issues preventing deployments
 
 ---
+
+## 2025-08-06 11:35
+
+### Summary
+Replaced manual gosec installation with official GitHub Actions marketplace action
+
+### Files Modified
+- `.github/workflows/ci-cd.yml` - Replaced manual gosec installation with securecodewarrior/github-action-gosec action
+
+### Changes Made
+- Removed manual curl-based gosec installation that was failing
+- Replaced with `uses: securecodewarrior/github-action-gosec@master`
+- Simplified configuration with `args: './...'` parameter
+- Eliminated installation verification steps (no longer needed)
+
+### Reasoning
+- Manual installation via curl was failing with exit code 1
+- GitHub Actions marketplace actions are pre-tested and more reliable
+- Official securecodewarrior action handles all installation and setup automatically
+- Reduces complexity and potential points of failure in CI/CD pipeline
+- Standard approach recommended for GitHub Actions workflows
+
+### Impact on System
+- Resolves gosec installation failures in CI/CD pipeline
+- Enables reliable Go security scanning without manual installation
+- Cleaner workflow with fewer steps and less complexity
+- Official action provides better error handling and logging
+- More maintainable CI/CD pipeline with marketplace-supported tooling
+
+---

@@ -163,15 +163,10 @@ jobs:
       - name: 🧪 Run Go tests
         run: go test -v ./...
 
-      - name: 🔐 Install and run gosec security scan
-        run: |
-          # Install gosec to /usr/local/bin
-          curl -sfL https://raw.githubusercontent.com/securecodewarrior/gosec/master/install.sh | sudo sh -s -- -b /usr/local/bin latest
-          # Verify installation
-          which gosec
-          gosec --version
-          # Run gosec scan
-          gosec ./...
+      - name: 🔐 Run gosec security scan
+        uses: securecodewarrior/github-action-gosec@master
+        with:
+          args: './...'
 
       - name: 📖 Read semantic version
         id: get_version
