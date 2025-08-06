@@ -172,10 +172,28 @@ jobs:
       - name: 🧪 Run Go tests
         run: go test -v ./...
 
-      - name: 🔐 Run gosec security scan
-        uses: securego/gosec@v2.22.7
-        with:
-          args: './...'
+      - name: 🔍 Debug Go module state before gosec
+        run: |
+          echo "=== Go module info ==="
+          go mod verify
+          echo "=== Go env ==="
+          go env GOMOD GOPATH GOPROXY
+          echo "=== Module cache ==="
+          ls -la $GOPATH/pkg/mod/ || echo "No module cache found"
+          echo "=== Current directory contents ==="
+          ls -la
+
+      - name: 🔐 Install and run gosec security scan
+        run: |
+          # Install gosec binary
+          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          
+          # Ensure modules are available
+          go mod tidy
+          go mod download
+          
+          # Run gosec with explicit configuration
+          $(go env GOPATH)/bin/gosec -fmt json -out gosec-report.json -stdout -verbose=text ./...
 
       - name: 📖 Read semantic version
         id: get_version
