@@ -26,6 +26,19 @@ class WeatherResponse(BaseModel):
     source: str
 
 
+class LocalWeatherResponse(BaseModel):
+    location: str
+    latitude: float
+    longitude: float
+    temperature: float
+    wind_speed: float
+    wind_direction: int
+    weather_code: int
+    time: str
+    last_updated: str
+    source: str
+
+
 class ForecastDay(BaseModel):
     date: str
     max_temp: int
@@ -80,6 +93,39 @@ async def get_weather_forecast(
         raise HTTPException(status_code=500, detail=f"Failed to fetch forecast data: {str(e)}")
 
 
+@router.get("/weather/local/{location}", response_model=LocalWeatherResponse)
+async def get_local_weather(location: str):
+    """
+    Get current weather for predefined local locations using Open-Meteo API
+    
+    - **location**: Location key (san_bernardino, hesperia)
+    """
+    try:
+        weather_data = await weather_service.get_local_weather(location)
+        return LocalWeatherResponse(**weather_data)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch local weather data: {str(e)}")
+
+
+@router.get("/weather/local")
+async def get_all_local_weather():
+    """
+    Get current weather for all predefined local locations
+    """
+    try:
+        locations = ["san_bernardino", "hesperia"]
+        weather_data = {}
+        
+        for location in locations:
+            weather_data[location] = await weather_service.get_local_weather(location)
+        
+        return {"locations": weather_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch local weather data: {str(e)}")
+
+
 @router.get("/weather/cities")
 async def get_popular_cities():
     """
@@ -95,5 +141,9 @@ async def get_popular_cities():
             {"name": "Paris", "country": "FR", "code": "paris,fr"},
             {"name": "Toronto", "country": "CA", "code": "toronto,ca"},
             {"name": "Amsterdam", "country": "NL", "code": "amsterdam,nl"}
+        ],
+        "local_locations": [
+            {"name": "San Bernardino, CA", "code": "san_bernardino"},
+            {"name": "Hesperia, CA", "code": "hesperia"}
         ]
     }
