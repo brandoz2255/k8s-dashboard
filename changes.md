@@ -656,3 +656,43 @@ Replaced manual gosec installation with official GitHub Actions marketplace acti
 - More maintainable CI/CD pipeline with marketplace-supported tooling
 
 ---
+
+## 2025-08-06 11:40
+
+### Summary
+Fixed gosec action and Docker build issues in Go backend CI/CD pipeline
+
+### Files Modified
+- `.github/workflows/ci-cd.yml` - Fixed gosec action reference and Docker build context
+
+### Changes Made
+
+**Gosec Action Fix:**
+- Changed from `securecodewarrior/gosec-action@v1` to `securego/gosec@v2.22.7`
+- Used official securego/gosec action which is the maintained version
+- Kept same configuration with `args: './...'`
+
+**Docker Build Context:**
+- Confirmed Dockerfile exists in gin-api directory (correct for working-directory setup)
+- Added explicit `-f Dockerfile` flag for clarity
+- Build context (`.`) is correct since working-directory is gin-api
+
+**Debug Enhancement:**
+- Added environment debug step showing pwd, ls -la, Go files, and Dockerfiles
+- Helps troubleshoot any remaining path or file location issues
+
+### Reasoning
+- `securecodewarrior/github-action-gosec` action doesn't exist in GitHub marketplace
+- `securego/gosec` is the official maintained action for gosec scanning
+- Docker build context is correct but explicit `-f Dockerfile` improves clarity
+- Debug steps provide visibility into environment state for troubleshooting
+- Working directory approach is appropriate since all Go files are in gin-api/
+
+### Impact on System
+- Resolves "action not found" error for gosec security scanning
+- Enables successful Go security analysis with official maintained action
+- Docker builds will work correctly with proper context and file locations
+- Debug output helps identify any remaining environment issues
+- CI/CD pipeline now uses stable, supported actions for all security tooling
+
+---

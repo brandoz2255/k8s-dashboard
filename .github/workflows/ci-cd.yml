@@ -145,6 +145,15 @@ jobs:
       - name: ⏬ Checkout code
         uses: actions/checkout@v4
 
+      - name: 🔍 Debug environment
+        run: |
+          pwd
+          ls -la
+          echo "Go files:"
+          find . -name "*.go" -type f
+          echo "Docker files:"
+          find . -name "Dockerfile" -type f
+
       - name: 🐹 Set up Go 1.21
         uses: actions/setup-go@v4
         with:
@@ -164,7 +173,7 @@ jobs:
         run: go test -v ./...
 
       - name: 🔐 Run gosec security scan
-        uses: securecodewarrior/github-action-gosec@master
+        uses: securego/gosec@v2.22.7
         with:
           args: './...'
 
@@ -181,7 +190,7 @@ jobs:
 
       - name: 🐳 Docker build with semantic version
         run: |
-          docker build -t dulc3/command-be-gin:$VERSION .
+          docker build -t dulc3/command-be-gin:$VERSION -f Dockerfile .
           docker tag dulc3/command-be-gin:$VERSION dulc3/command-be-gin:latest
 
       - name: 🔐 DockerHub Login
