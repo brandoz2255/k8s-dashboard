@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./cyber-dashboard
+      dockerfile: Dockerfile
+    container_name: command-frontend
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    ports:
+      - "3000:3000"
+    networks:
+      - k8s-dashboard-net
+    restart: unless-stopped
+    depends_on:
+      - python-backend
+      - go-backend
+
+  # Python FastAPI Backend  
+  python-backend:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: command-be-py
+    environment:
+      - PORT=8000
+      - ENVIRONMENT=production
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:80,http://localhost:8080
+    ports:
+      - "8000:8000"
+    networks:
+      - k8s-dashboard-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Go Gin Backend
+  go-backend:
+    build:
+      context: ./gin-api
+      dockerfile: Dockerfile
+    container_name: command-be-gin
+    environment:
+      - PORT=8080
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-here}
+      - GIN_MODE=release
+    ports:
+      - "8080:8080"
+    networks:
+      - k8s-dashboard-net
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: command-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-k8s_dashboard}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - k8s-dashboard-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: command-nginx
+    ports:
+      - "81:81"
+      - "445:445"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - k8s-dashboard-net
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - python-backend
+      - go-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  k8s-dashboard-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local

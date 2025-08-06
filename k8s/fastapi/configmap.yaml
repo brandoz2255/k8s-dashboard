@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fastapi-config
+  namespace: cyber-dashboard
+  labels:
+    app: fastapi
+    component: backend
+data:
+  PORT: "8000"
+  ENVIRONMENT: "production"
+  ALLOWED_ORIGINS: "https://command.dulc3.tech,http://localhost:3000"
+  # Cache configuration
+  CACHE_TTL_WEATHER: "600"  # 10 minutes
+  CACHE_TTL_SOCIAL: "900"   # 15 minutes

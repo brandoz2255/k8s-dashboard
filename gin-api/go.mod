@@ -1,4 +1,4 @@
-module gin-api
+module github.com/dulc3/k8s-dashboard/gin-api
 
 go 1.20
 

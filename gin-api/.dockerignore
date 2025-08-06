@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md
+
+# Local env files
+.env*
+
+# Logs
+*.log
+
+# Test files
+*_test.go
+*.test
+
+# Temporary files
+*.tmp
+*.temp
+
+# Go workspace file
+go.work
+
+# Build artifacts (keep source for multi-stage builds)
+gin-api
+main

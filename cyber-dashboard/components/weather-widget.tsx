@@ -17,8 +17,27 @@ import {
   RefreshCw,
 } from "lucide-react"
 
-// Weather data type definition
+// Weather data type definition for FastAPI response
 interface WeatherData {
+  city: string
+  country: string
+  temperature: number
+  feels_like: number
+  humidity: number
+  pressure: number
+  description: string
+  icon: string
+  wind_speed: number
+  wind_direction: number
+  visibility: number
+  sunrise: string
+  sunset: string
+  last_updated: string
+  source: string
+}
+
+// Legacy format for component compatibility
+interface ComponentWeatherData {
   location: string
   current: {
     temp: number
@@ -43,8 +62,8 @@ interface WeatherData {
   }[]
 }
 
-// Mock weather data - would be fetched from your Go API
-const mockWeatherData: WeatherData = {
+// Mock weather data - fallback when API is unavailable
+const mockWeatherData: ComponentWeatherData = {
   location: "San Bernardino, CA",
   current: {
     temp: 78,
@@ -67,42 +86,112 @@ const mockWeatherData: WeatherData = {
   ],
 }
 
+// Transform FastAPI weather data to component format
+const transformWeatherData = (apiData: WeatherData): ComponentWeatherData => {
+  // Convert wind direction degrees to cardinal direction
+  const getCardinalDirection = (degrees: number): string => {
+    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+    return directions[Math.round(degrees / 22.5) % 16]
+  }
+
+  // Map OpenWeatherMap icons to our icon names
+  const mapWeatherIcon = (owmIcon: string): string => {
+    const iconMap: { [key: string]: string } = {
+      '01d': 'sunny',           // clear sky day
+      '01n': 'clear-night',     // clear sky night
+      '02d': 'partly-cloudy',   // few clouds day
+      '02n': 'partly-cloudy',   // few clouds night
+      '03d': 'cloudy',          // scattered clouds
+      '03n': 'cloudy',          // scattered clouds
+      '04d': 'cloudy',          // broken clouds
+      '04n': 'cloudy',          // broken clouds
+      '09d': 'drizzle',         // shower rain
+      '09n': 'drizzle',         // shower rain
+      '10d': 'rain',            // rain day
+      '10n': 'rain',            // rain night
+      '11d': 'thunderstorm',    // thunderstorm
+      '11n': 'thunderstorm',    // thunderstorm
+      '13d': 'snow',            // snow
+      '13n': 'snow',            // snow
+      '50d': 'cloudy',          // mist
+      '50n': 'cloudy',          // mist
+    }
+    return iconMap[owmIcon] || 'partly-cloudy'
+  }
+
+  return {
+    location: `${apiData.city}, ${apiData.country}`,
+    current: {
+      temp: Math.round(apiData.temperature * 9/5 + 32), // Convert C to F
+      feelsLike: Math.round(apiData.feels_like * 9/5 + 32), // Convert C to F
+      humidity: apiData.humidity,
+      windSpeed: Math.round(apiData.wind_speed * 2.237), // Convert m/s to mph
+      windDirection: getCardinalDirection(apiData.wind_direction),
+      pressure: apiData.pressure,
+      uvIndex: 6, // Not provided by OpenWeatherMap basic plan
+      visibility: apiData.visibility,
+      condition: apiData.description,
+      icon: mapWeatherIcon(apiData.icon),
+      lastUpdated: new Date(apiData.last_updated).toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      }),
+    },
+    forecast: [
+      { date: "Today", time: "12 PM", temp: 82, condition: "Sunny", icon: "sunny", chanceOfRain: 0 },
+      { date: "Today", time: "3 PM", temp: 85, condition: "Partly Cloudy", icon: "partly-cloudy", chanceOfRain: 10 },
+      { date: "Today", time: "6 PM", temp: 79, condition: "Partly Cloudy", icon: "partly-cloudy", chanceOfRain: 20 },
+      { date: "Today", time: "9 PM", temp: 72, condition: "Clear", icon: "clear-night", chanceOfRain: 0 },
+    ],
+  }
+}
+
 export function WeatherWidget() {
-  const [weatherData, setWeatherData] = useState<WeatherData>(mockWeatherData)
+  const [weatherData, setWeatherData] = useState<ComponentWeatherData>(mockWeatherData)
   const [isLoading, setIsLoading] = useState(false)
 
-  // Function to fetch weather data
-  const fetchWeatherData = () => {
+  // Function to fetch weather data from FastAPI backend
+  const fetchWeatherData = async () => {
     setIsLoading(true)
 
-    // This would be replaced with actual API call to your Go backend
-    /*
-    API INTEGRATION POINT:
-    
-    const fetchWeather = async () => {
-      try {
-        // You can use services like OpenWeatherMap, WeatherAPI, etc.
-        const response = await fetch('/api/weather');
-        if (!response.ok) {
-          throw new Error('Failed to fetch weather data');
-        }
-        const data = await response.json();
-        setWeatherData(data);
-      } catch (error) {
-        console.error('Error fetching weather data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchWeather();
-    */
+    try {
+      // Fetch from FastAPI backend
+      const fastApiUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://api.command.dulc3.tech'  // Production FastAPI URL
+        : 'http://localhost:8000'           // Development FastAPI URL
+      
+      const response = await fetch(`${fastApiUrl}/api/weather?city=London&country=GB`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add timeout
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      })
 
-    // For now, we'll just use the mock data with a simulated delay
-    setTimeout(() => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const apiData: WeatherData = await response.json()
+      
+      // Transform API data to component format
+      const transformedData = transformWeatherData(apiData)
+      setWeatherData(transformedData)
+      
+      console.log('Weather data fetched successfully from FastAPI:', apiData.source)
+      
+    } catch (error) {
+      console.error('Error fetching weather data from FastAPI:', error)
+      
+      // Fallback to mock data if API fails
       setWeatherData(mockWeatherData)
+      console.log('Using fallback mock weather data')
+      
+    } finally {
       setIsLoading(false)
-    }, 500)
+    }
   }
 
   // Fetch weather data on component mount
@@ -249,7 +338,7 @@ export function WeatherWidget() {
 
         {/* Forecast */}
         <div className="p-3 flex-1">
-          <h4 className="text-sm font-medium text-cyan-400 mb-2">Today's Forecast</h4>
+          <h4 className="text-sm font-medium text-cyan-400 mb-2">Today&apos;s Forecast</h4>
           <div className="flex justify-between">
             {weatherData.forecast.map((item, index) => (
               <div key={index} className="flex flex-col items-center">

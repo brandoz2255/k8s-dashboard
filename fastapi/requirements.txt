@@ -1,0 +1,8 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+httpx==0.25.2
+pydantic==2.5.0
+python-dotenv==1.0.0
+feedparser==6.0.10
+beautifulsoup4==4.12.2
+lxml==4.9.3

@@ -1,0 +1,225 @@
+name: K8s Dashboard CI/CD 🚀
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cyber-dashboard/**'
+      - 'fastapi/**'
+      - 'gin-api/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'cyber-dashboard/**'
+      - 'fastapi/**'
+      - 'gin-api/**'
+      - '.github/workflows/**'
+
+jobs:
+  # Frontend Build & Test
+  frontend-build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cyber-dashboard
+
+    steps:
+      - name: ⏬ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: cyber-dashboard/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run linting
+        run: npm run lint
+
+      - name: 🏗️ Build application
+        run: npm run build
+
+      - name: 📖 Read semantic version
+        id: get_version
+        run: |
+          if [ -f VERSION ]; then
+            VERSION="v$(cat VERSION)"
+          else
+            VERSION="v0.1.0"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Using VERSION: $VERSION"
+
+      - name: 🐳 Docker build with semantic version
+        run: |
+          docker build -t dulc3/command-fr:$VERSION .
+          docker tag dulc3/command-fr:$VERSION dulc3/command-fr:latest
+
+      - name: 🔐 DockerHub Login
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 📤 Push image to DockerHub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push dulc3/command-fr:$VERSION
+          docker push dulc3/command-fr:latest
+
+  # Python FastAPI Backend Build & Test
+  python-backend-build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fastapi
+
+    steps:
+      - name: ⏬ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install Python dependencies + Security tools
+        run: |
+          pip install -r requirements.txt
+          pip install bandit pytest
+
+      - name: 🔐 Run Bandit Security Scan
+        run: bandit -r . -ll
+
+      - name: 🧪 Run tests (if test files exist)
+        run: |
+          if [ -d "tests" ] || find . -name "*test*.py" -type f | grep -q .; then
+            pytest -v
+          else
+            echo "No tests found, skipping test execution"
+          fi
+
+      - name: 📖 Read semantic version
+        id: get_version
+        run: |
+          if [ -f VERSION ]; then
+            VERSION="v$(cat VERSION)"
+          else
+            VERSION="v0.1.0"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Using VERSION: $VERSION"
+
+      - name: 🐳 Docker build with semantic version
+        run: |
+          docker build -t dulc3/command-be-py:$VERSION .
+          docker tag dulc3/command-be-py:$VERSION dulc3/command-be-py:latest
+
+      - name: 🔐 DockerHub Login
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 📤 Push image to DockerHub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push dulc3/command-be-py:$VERSION
+          docker push dulc3/command-be-py:latest
+
+  # Go Gin Backend Build & Test
+  go-backend-build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gin-api
+
+    steps:
+      - name: ⏬ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Debug environment
+        run: |
+          pwd
+          ls -la
+          echo "Go files:"
+          find . -name "*.go" -type f
+          echo "Docker files:"
+          find . -name "Dockerfile" -type f
+
+      - name: 🐹 Set up Go 1.21
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+          cache-dependency-path: gin-api/go.sum
+
+      - name: 📦 Download Go dependencies
+        run: go mod download
+
+      - name: 🔍 Run Go vet
+        run: go vet ./...
+
+      - name: 🏗️ Build Go application
+        run: go build -v ./...
+
+      - name: 🧪 Run Go tests
+        run: go test -v ./...
+
+      - name: 🔍 Debug Go module state before gosec
+        run: |
+          echo "=== Go module info ==="
+          go mod verify
+          echo "=== Go env ==="
+          go env GOMOD GOPATH GOPROXY
+          echo "=== Module cache ==="
+          ls -la $(go env GOPATH)/pkg/mod/ || echo "No module cache found"
+          echo "=== Current directory contents ==="
+          ls -la
+
+      - name: 🔐 Install and run gosec security scan
+        run: |
+          # Install gosec binary (FIXED: correct package path)
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          
+          # Ensure modules are available
+          go mod tidy
+          go mod download
+          
+          # Run gosec with explicit configuration
+          $(go env GOPATH)/bin/gosec -fmt json -out gosec-report.json -stdout -verbose=text ./...
+
+      - name: 📖 Read semantic version
+        id: get_version
+        run: |
+          if [ -f VERSION ]; then
+            VERSION="v$(cat VERSION)"
+          else
+            VERSION="v0.1.0"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Using VERSION: $VERSION"
+
+      - name: 🐳 Docker build with semantic version
+        run: |
+          docker build -t dulc3/command-be-gin:$VERSION -f Dockerfile .
+          docker tag dulc3/command-be-gin:$VERSION dulc3/command-be-gin:latest
+
+      - name: 🔐 DockerHub Login
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 📤 Push image to DockerHub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push dulc3/command-be-gin:$VERSION
+          docker push dulc3/command-be-gin:latest
