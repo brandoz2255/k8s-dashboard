@@ -3,14 +3,23 @@ name: K8s Dashboard CI/CD 🚀
 on:
   push:
     branches: [main]
+    paths:
+      - 'cyber-dashboard/**'
+      - 'fastapi/**'
+      - 'gin-api/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
+    paths:
+      - 'cyber-dashboard/**'
+      - 'fastapi/**'
+      - 'gin-api/**'
+      - '.github/workflows/**'
 
 jobs:
   # Frontend Build & Test
   frontend-build-test:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'cyber-dashboard/') || github.event_name == 'pull_request'
     defaults:
       run:
         working-directory: cyber-dashboard
@@ -67,7 +76,6 @@ jobs:
   # Python FastAPI Backend Build & Test
   python-backend-build-test:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'fastapi/') || github.event_name == 'pull_request'
     defaults:
       run:
         working-directory: fastapi
@@ -129,7 +137,6 @@ jobs:
   # Go Gin Backend Build & Test
   go-backend-build-test:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.modified, 'gin-api/') || github.event_name == 'pull_request'
     defaults:
       run:
         working-directory: gin-api
@@ -158,10 +165,13 @@ jobs:
 
       - name: 🔐 Install and run gosec security scan
         run: |
-          # Install gosec
-          curl -sfL https://raw.githubusercontent.com/securecodewarrior/gosec/master/install.sh | sh -s -- -b /tmp/gosec latest
+          # Install gosec to /usr/local/bin
+          curl -sfL https://raw.githubusercontent.com/securecodewarrior/gosec/master/install.sh | sudo sh -s -- -b /usr/local/bin latest
+          # Verify installation
+          which gosec
+          gosec --version
           # Run gosec scan
-          /tmp/gosec/gosec ./...
+          gosec ./...
 
       - name: 📖 Read semantic version
         id: get_version

@@ -586,3 +586,43 @@ Fixed gosec binary PATH issue by using direct binary execution in CI/CD pipeline
 - Streamlined CI/CD workflow with better error resistance
 
 ---
+
+## 2025-08-06 11:30
+
+### Summary
+Fixed CI/CD pipeline job triggers and Docker image pushing logic
+
+### Files Modified
+- `.github/workflows/ci-cd.yml` - Fixed job triggers, gosec installation, and path-based workflow execution
+
+### Changes Made
+
+**Job Trigger Fixes:**
+- Removed invalid `if: contains(github.event.head_commit.modified, ...)` conditions from all jobs
+- Added proper `paths` filters to workflow triggers for push and pull_request events
+- Now triggers only when files in `cyber-dashboard/`, `fastapi/`, `gin-api/`, or `.github/workflows/` change
+
+**Gosec Installation Fix:**
+- Changed installation to use `/usr/local/bin` with `sudo` for proper permissions
+- Added verification steps (`which gosec`, `gosec --version`) for debugging
+- Simplified to direct `gosec ./...` execution after installation
+
+**Docker Push Logic:**
+- Existing Docker login/push conditions work correctly: `if: github.event_name == 'push' && github.ref == 'refs/heads/main'`
+- Jobs will now actually run on main branch pushes (fixing the trigger issue)
+
+### Reasoning
+- `github.event.head_commit.modified` doesn't exist in GitHub Actions context
+- Path-based triggers are more efficient and only run jobs when relevant files change
+- `/usr/local/bin` is in PATH by default, eliminating PATH issues
+- Verification steps help debug installation problems
+- Removing invalid job conditions allows jobs to run when they should
+
+### Impact on System
+- CI/CD pipeline will now properly trigger on main branch pushes
+- Docker images will be built and pushed to DockerHub as intended
+- More efficient builds (only runs when relevant files change)
+- Proper gosec security scanning for Go code
+- Resolved all CI/CD execution issues preventing deployments
+
+---
