@@ -179,14 +179,14 @@ jobs:
           echo "=== Go env ==="
           go env GOMOD GOPATH GOPROXY
           echo "=== Module cache ==="
-          ls -la $GOPATH/pkg/mod/ || echo "No module cache found"
+          ls -la $(go env GOPATH)/pkg/mod/ || echo "No module cache found"
           echo "=== Current directory contents ==="
           ls -la
 
       - name: 🔐 Install and run gosec security scan
         run: |
-          # Install gosec binary
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          # Install gosec binary (FIXED: correct package path)
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
           
           # Ensure modules are available
           go mod tidy
