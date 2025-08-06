@@ -117,7 +117,7 @@ func GenerateJWT(username string) (string, error) {
 	if secret == "" {
 		return "", fmt.Errorf("JWT_SECRET not set")
 	}
-	claims := jwt.MapClaims{"username": username, "exp": time.Now().Add(24 * time.Hour).Unix()}
+	claims := jwt.MapClaims{"sub": username, "exp": time.Now().Add(24 * time.Hour).Unix()}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	token.Header["kid"] = "v1" // JWT allows header to alloow multiple pub keys during transitions
 	return token.SignedString([]byte(secret))
