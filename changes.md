@@ -526,3 +526,33 @@ Fixed pytest import configuration to resolve CI/CD pipeline test failures
 - No functional changes to application code, only test configuration
 
 ---
+
+## 2025-08-06 11:20
+
+### Summary
+Fixed gosec installation in CI/CD pipeline to resolve Go security scanning failures
+
+### Files Modified
+- `.github/workflows/ci-cd.yml` - Updated gosec installation method in go-backend-build-test job
+
+### Changes Made
+- Replaced `go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest` with curl-based installation
+- Split installation into separate step using official gosec install script
+- Added GOPATH/bin to GitHub Actions PATH for gosec binary access
+- Used `curl -sfL https://raw.githubusercontent.com/securecodewarrior/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest`
+
+### Reasoning
+- GitHub Actions runners were encountering authentication issues with `go install` for gosec
+- The curl-based installation method doesn't require Git authentication
+- Official gosec install script is more reliable for CI/CD environments
+- Separate installation step provides better error isolation and debugging
+- Adding to PATH ensures gosec binary is available for subsequent steps
+
+### Impact on System
+- Resolves CI/CD pipeline failure in Go backend security scanning
+- Enables proper gosec security analysis for Go code
+- Maintains security scanning capabilities without authentication issues
+- No changes to actual security scanning functionality, only installation method
+- More reliable CI/CD pipeline execution for Go backend builds
+
+---

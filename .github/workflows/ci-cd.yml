@@ -156,10 +156,13 @@ jobs:
       - name: 🧪 Run Go tests
         run: go test -v ./...
 
-      - name: 🔐 Run gosec security scan
+      - name: 🔐 Install gosec security scanner
         run: |
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-          gosec ./...
+          curl -sfL https://raw.githubusercontent.com/securecodewarrior/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: 🔐 Run gosec security scan
+        run: gosec ./...
 
       - name: 📖 Read semantic version
         id: get_version
